@@ -19,7 +19,7 @@ node{
     sh "docker push ravi12365804/java-webapp-docker"
     }
     stage('Run Docker Image in Deployment Server'){
-        def dockerun = "docker run -d -p 8080:8080 --name java-web-app ravi12365804/java-webapp-docker "
+        def dockerun = "docker run -d -p 8081:8080 --name java-web-app ravi12365804/java-webapp-docker "
         sshagent(['docker_hoost']) {
      sh "ssh -o StrictHostKeyChecking=no ec2-user@172.31.15.163 docker stop java-webapp-docker || true"
      sh "ssh ec2-user@172.31.15.163 docker rm java-web-app || true"
