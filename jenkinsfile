@@ -1,0 +1,31 @@
+node{
+    stage('CheckoutCode'){
+        git changelog: false, credentialsId: 'c4dbfbc7-32a4-413f-826d-bf4c47610118',
+        poll: false, url: 'https://github.com/raviuptimecareer/java-web-app-docker.git'
+    }
+    stage('Build Code'){
+        def mavenHome = tool name: "maven-3.9.6"
+        def mavenCMD = "${mavenHome}/bin/mvn"
+        sh "${mavenCMD} clean package"
+        
+    }
+    stage('Build DockerImage'){
+        sh "docker build -t ravi12365804/java-webapp-docker ."
+    }
+    stage('DockerLogin And Push Image'){
+        withCredentials([string(credentialsId: 'Docker_Hub_Pwd', variable: 'Docker_Hub_Pwd')]) {
+      sh "docker login -u ravi12365804 -p ${Docker_Hub_Pwd}"
+    }
+    sh "docker push ravi12365804/java-webapp-docker"
+    }
+    stage('Run Docker Image in Deployment Server'){
+        def dockerun = "docker run -d -p 8080:8080 --name java-web-app ravi12365804/java-webapp-docker "
+        sshagent(['docker_hoost']) {
+     sh "ssh -o StrictHostKeyChecking=no ec2-user@172.31.15.163 docker stop java-webapp-docker || true"
+     sh "ssh ec2-user@172.31.15.163 docker rm java-web-app || true"
+     sh "ssh ec2-user@172.31.15.163 docker rmi -f \$(docker images -q) || true"
+     sh "ssh ec2-user@172.31.15.163 ${dockerun}"
+            
+        }
+}
+}
